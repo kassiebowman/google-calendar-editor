@@ -5,7 +5,11 @@ import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInsta
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.batch.BatchRequest;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -28,11 +32,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Main class for communicating with Google Calendars API to edit calendar entries
+ *
+ * @author kbowman
+ * @since 1.0.0
+ */
 public class CalendarEditor
 {
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String APPLICATION_NAME = "Google Calendar Editor";
+    private static final BatchCallback BATCH_CALLBACK = new BatchCallback();
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
@@ -45,9 +56,9 @@ public class CalendarEditor
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
-    private static final String TEXT_TO_REPLACE = "Replace me.";
-    private static final String NEW_TEXT = "This is the new text!!!";
-    public static final String CALENDAR_ID = "primary";
+    private static final String TEXT_TO_REPLACE = "Closed";
+    private static final String NEW_TEXT = "Open";
+    private static final String CALENDAR_ID = "primary";
 
     /**
      * Creates an authorized Credential object.
@@ -80,28 +91,31 @@ public class CalendarEditor
     {
         // Build a new authorized API client service.
         final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-        Calendar service = new Calendar.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
+        Calendar calendarClient = new Calendar.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
 
-        // List the next 10 events from the primary calendar.
+        BatchRequest batchRequest = calendarClient.batch();
+
+        // Request all events in the next 3 days from the primary calendar.
         long currentTimeMs = System.currentTimeMillis();
         DateTime now = new DateTime(currentTimeMs);
         DateTime threeDays = new DateTime(currentTimeMs + THREE_DAYS_IN_MS);
-        Events events = service.events().list(CALENDAR_ID)
+        Events events = calendarClient.events().list(CALENDAR_ID)
                 .setTimeMin(now)
                 .setTimeMax(threeDays)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .execute();
-        List<Event> items = events.getItems();
-        if (items.isEmpty())
+        List<Event> eventList = events.getItems();
+        if (eventList.isEmpty())
         {
             logger.info("No events found in the next 3 days.");
         } else
         {
-            logger.info("Upcoming events:");
-            for (Event event : items)
+            boolean eventsUpdated = false;
+
+            for (Event event : eventList)
             {
                 String eventTitle = event.getSummary();
                 String eventDescription = event.getDescription();
@@ -111,16 +125,33 @@ public class CalendarEditor
                     String updatedDescription = eventDescription.replace(TEXT_TO_REPLACE, NEW_TEXT);
                     event.setDescription(updatedDescription);
 
-                    service.events().update(CALENDAR_ID, event.getId(), event).execute();
-                    logger.info("Updated description for event {}", eventTitle);
+                    logger.info("Queuing update for event {}", eventTitle);
+                    calendarClient.events().update(CALENDAR_ID, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
+                    eventsUpdated = true;
                 }
-                DateTime start = event.getStart().getDateTime();
-                if (start == null)
-                {
-                    start = event.getStart().getDate();
-                }
-                logger.info("\t{} ({})", eventTitle, start);
             }
+
+            // Only execute the batch request if there were events to be updated.
+            if (eventsUpdated)
+            {
+                batchRequest.execute();
+            }
+        }
+    }
+
+    private static class BatchCallback extends JsonBatchCallback<Event>
+    {
+        @Override
+        public void onFailure(GoogleJsonError error, HttpHeaders responseHeaders) throws IOException
+        {
+            logger.error("Error during event edit: {}", error.getMessage());
+        }
+
+        @Override
+        public void onSuccess(Event event, HttpHeaders responseHeaders) throws IOException
+        {
+            logger.info("Event edit was successful: {}", event.getSummary());
+            // TODO: Anything else to do on success?
         }
     }
 }
