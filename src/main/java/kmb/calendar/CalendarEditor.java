@@ -30,6 +30,8 @@ import java.lang.invoke.MethodHandles;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,6 +61,8 @@ public class CalendarEditor
     private static final String TEXT_TO_REPLACE = "Closed";
     private static final String NEW_TEXT = "Open";
     private static final String CALENDAR_ID = "primary";
+
+    private static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     /**
      * Creates an authorized Credential object.
@@ -97,58 +101,72 @@ public class CalendarEditor
 
         BatchRequest batchRequest = calendarClient.batch();
 
-        // Request all events in the next 3 days from the primary calendar.
-        long currentTimeMs = System.currentTimeMillis();
-        DateTime now = new DateTime(currentTimeMs);
-        DateTime threeDays = new DateTime(currentTimeMs + THREE_DAYS_IN_MS);
-        Events events = calendarClient.events().list(CALENDAR_ID)
-                .setTimeMin(now)
-                .setTimeMax(threeDays)
-                .setOrderBy("startTime")
-                .setSingleEvents(true)
-                .execute();
-        List<Event> eventList = events.getItems();
-        if (eventList.isEmpty())
-        {
-            logger.info("No events found in the next 3 days.");
-        } else
-        {
-            boolean eventsUpdated = false;
-
-            for (Event event : eventList)
+        executorService.scheduleAtFixedRate(() -> {
+            logger.info("Running update thread.");
+            try
             {
-                String eventTitle = event.getSummary();
-                String eventDescription = event.getDescription();
+                // Request all events in the next 3 days from the primary calendar.
+                long currentTimeMs = System.currentTimeMillis();
+                DateTime now = new DateTime(currentTimeMs);
+                DateTime threeDays = new DateTime(currentTimeMs + THREE_DAYS_IN_MS);
 
-                if (eventDescription != null && eventDescription.contains(TEXT_TO_REPLACE))
+                Events events = calendarClient.events().list(CALENDAR_ID)
+                        .setTimeMin(now)
+                        .setTimeMax(threeDays)
+                        .setOrderBy("startTime")
+                        .setSingleEvents(true)
+                        .execute();
+
+                List<Event> eventList = events.getItems();
+                if (eventList.isEmpty())
                 {
-                    String updatedDescription = eventDescription.replace(TEXT_TO_REPLACE, NEW_TEXT);
-                    event.setDescription(updatedDescription);
+                    logger.info("No events found in the next 3 days.");
+                } else
+                {
+                    boolean eventsUpdated = false;
 
-                    logger.info("Queuing update for event {}", eventTitle);
-                    calendarClient.events().update(CALENDAR_ID, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
-                    eventsUpdated = true;
+                    for (Event event : eventList)
+                    {
+                        String eventTitle = event.getSummary();
+                        String eventDescription = event.getDescription();
+
+                        if (eventDescription != null && eventDescription.contains(TEXT_TO_REPLACE))
+                        {
+                            String updatedDescription = eventDescription.replace(TEXT_TO_REPLACE, NEW_TEXT);
+                            event.setDescription(updatedDescription);
+
+                            logger.info("Queuing update for event {}", eventTitle);
+                            calendarClient.events().update(CALENDAR_ID, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
+                            eventsUpdated = true;
+                        }
+                    }
+
+                    // Only execute the batch request if there were events to be updated.
+                    if (eventsUpdated)
+                    {
+                        batchRequest.execute();
+                    }
                 }
-            }
-
-            // Only execute the batch request if there were events to be updated.
-            if (eventsUpdated)
+            } catch (IOException e)
             {
-                batchRequest.execute();
+                logger.error("Error querying or updating events", e);
             }
-        }
+        }, 0, 1, TimeUnit.MINUTES); // TODO: Change the unit to hours after testing
     }
 
+    /**
+     * Callback for handling success/failure of batch requests.
+     */
     private static class BatchCallback extends JsonBatchCallback<Event>
     {
         @Override
-        public void onFailure(GoogleJsonError error, HttpHeaders responseHeaders) throws IOException
+        public void onFailure(GoogleJsonError error, HttpHeaders responseHeaders)
         {
             logger.error("Error during event edit: {}", error.getMessage());
         }
 
         @Override
-        public void onSuccess(Event event, HttpHeaders responseHeaders) throws IOException
+        public void onSuccess(Event event, HttpHeaders responseHeaders)
         {
             logger.info("Event edit was successful: {}", event.getSummary());
             // TODO: Anything else to do on success?
