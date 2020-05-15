@@ -58,8 +58,8 @@ public class CalendarEditor
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
-    private static final String TEXT_TO_REPLACE = "Closed";
-    private static final String NEW_TEXT = "Open";
+    private static final String TEXT_TO_REPLACE = "Registration will open 72 hours before class start time. Class size is ";
+    private static final String NEW_TEXT = "Spots:";
     private static final String CALENDAR_ID = "primary";
 
     private static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
