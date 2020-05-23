@@ -9,13 +9,13 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  */
 public class EventUpdater
 {
-    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger logger = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
     private static final BatchCallback BATCH_CALLBACK = new BatchCallback();
     private static final String TEXT_TO_REPLACE = "Registration will open 72 hours before class start time. Class size is ";
     private static final Pattern TEXT_TO_REPLACE_PATTERN = Pattern.compile(TEXT_TO_REPLACE, Pattern.LITERAL);
@@ -82,7 +82,7 @@ public class EventUpdater
                 List<Event> events = eventsResponse.getItems();
                 if (events.isEmpty())
                 {
-                    logger.info("No events found in the next 3 days for calendar {}.", calendarName);
+                    logger.info("No events found in the next 3 days for calendar " + calendarName + ".");
                     continue;
                 }
 
@@ -96,7 +96,7 @@ public class EventUpdater
                         String updatedDescription = TEXT_TO_REPLACE_PATTERN.matcher(eventDescription).replaceAll(Matcher.quoteReplacement(NEW_TEXT));
                         event.setDescription(updatedDescription);
 
-                        logger.info("Queuing update for event {} on calendar {}", eventTitle, calendarName);
+                        logger.info("Queuing update for event " + eventTitle + " on calendar " + calendarName);
                         calendarClient.events().update(calendarId, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
                         eventsUpdated = true;
                     }
@@ -110,7 +110,7 @@ public class EventUpdater
             }
         } catch (IOException e)
         {
-            logger.error("Error querying or updating events", e);
+            logger.log(Level.SEVERE, "Error querying or updating events", e);
         }
     }
 
@@ -122,13 +122,13 @@ public class EventUpdater
         @Override
         public void onFailure(GoogleJsonError error, HttpHeaders responseHeaders)
         {
-            logger.error("Error during event edit: {}", error.getMessage());
+            logger.severe("Error during event edit: " + error.getMessage());
         }
 
         @Override
         public void onSuccess(Event event, HttpHeaders responseHeaders)
         {
-            logger.info("Event edit was successful: {}", event.getSummary());
+            logger.info("Event edit was successful: " + event.getSummary());
             // TODO: Anything else to do on success?
         }
     }

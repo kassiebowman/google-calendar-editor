@@ -13,8 +13,6 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.CalendarListEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,6 +25,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  */
 public class CalendarEditor
 {
-    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger logger = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
 
     private static final String APPLICATION_NAME = "Google Calendar Editor";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -91,10 +91,10 @@ public class CalendarEditor
         CalendarSelector calendarSelector = new CalendarSelector(calendarClient, args);
         List<CalendarListEntry> selectedCalendars = calendarSelector.getSelectedCalendars();
 
-        if (logger.isInfoEnabled())
+        if (logger.getLevel() == Level.INFO)
         {
             List<String> calendarNames = selectedCalendars.stream().map(CalendarListEntry::getSummary).collect(Collectors.toList());
-            logger.info("The following calendars will be monitored and updated: {}", calendarNames);
+            logger.info("The following calendars will be monitored and updated: " + calendarNames);
         }
 
         // TODO: Add a command line arg to set the update period instead of hard-coding to 3 days

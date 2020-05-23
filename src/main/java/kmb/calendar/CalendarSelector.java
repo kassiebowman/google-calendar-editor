@@ -3,8 +3,6 @@ package kmb.calendar;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  */
 public class CalendarSelector
 {
-    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger logger = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
     private static final String DEFAULT_CALENDAR_FILE_NAME = "calendarNames.csv";
     private final List<CalendarListEntry> calendars;
 
@@ -69,7 +69,7 @@ public class CalendarSelector
             }
         } catch (IOException e)
         {
-            logger.error("Error reading from calendar file {}", calendarFileName, e);
+            logger.log(Level.SEVERE, "Error reading from calendar file " + calendarFileName, e);
         }
 
         return calendarNames;
@@ -89,7 +89,7 @@ public class CalendarSelector
             return calendarListResponse.getItems();
         } catch (IOException e)
         {
-            logger.error("Error querying for calendars", e);
+            logger.log(Level.SEVERE, "Error querying for calendars", e);
         }
 
         return Collections.emptyList();
@@ -115,7 +115,7 @@ public class CalendarSelector
 
             if (calendar == null)
             {
-                logger.warn("No calendar found with the name `{}`", calendarName);
+                logger.warning("No calendar found with the name `" + calendarName + "`");
                 continue;
             }
 
