@@ -1,22 +1,52 @@
-plugins {
-    id 'java'
-    id 'application'
+buildscript {      // Configuration for building
+    repositories {
+        jcenter()      // Bintray's repository - a fast Maven Central mirror & more
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.2.0' // Latest 1.x.x release
+    }
 }
 
-mainClassName = 'kmb.calendar.CalendarEditor'
+plugins {
+    id 'org.springframework.boot' version '2.3.0.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+}
+
+apply plugin: 'com.google.cloud.tools.appengine'
 
 group 'kmb.calendar'
 version '1.0.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 repositories {
+    jcenter()
     mavenCentral()
 }
 
+appengine {
+    deploy {   // deploy configuration
+        stopPreviousVersion = true  // default - stop the current version
+        promote = true              // default - & make this the current version
+        projectId = 'GCLOUD_CONFIG' // delegate to project in gcloud config
+        version = 'GCLOUD_CONFIG'   // delegate to gcloud to generate a version
+    }
+}
+
+configurations {
+    compile.exclude module: "spring-boot-starter-tomcat"
+}
+
 dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-jetty:2.3.0.RELEASE")
+    
     compile 'com.google.api-client:google-api-client:1.23.0'
     compile 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
     compile 'com.google.apis:google-api-services-calendar:v3-rev305-1.23.0'
+}
+
+wrapper {
+    gradleVersion = '6.3'
 }
