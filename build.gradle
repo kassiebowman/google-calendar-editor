@@ -16,7 +16,7 @@ plugins {
 
 apply plugin: 'com.google.cloud.tools.appengine'
 
-group 'kmb.calendar'
+group 'dev.kassie.calendar'
 version '1.0.0-SNAPSHOT'
 
 
