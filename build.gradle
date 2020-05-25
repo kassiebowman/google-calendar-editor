@@ -19,11 +19,6 @@ apply plugin: 'com.google.cloud.tools.appengine'
 group 'dev.kassie.calendar'
 version '1.0.0-SNAPSHOT'
 
-repositories {
-    jcenter()
-    mavenCentral()
-}
-
 appengine {
     deploy {
         stopPreviousVersion = true  // default - stop the current version
@@ -35,15 +30,42 @@ appengine {
 
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat" // Exclude tomcat in order to use jetty
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+ext {
+    googleOauthVersion = "1.30.6"
+    springBootVersion = "2.3.0.RELEASE"
 }
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE"
-    compile "org.springframework.boot:spring-boot-starter-jetty:2.3.0.RELEASE"
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
+    developmentOnly "org.springframework.boot:spring-boot-devtools:$springBootVersion"
+
+    // Dependencies for https://spring.io/guides/tutorials/spring-boot-oauth2/ tutorial
+    compile "org.webjars:jquery:3.5.1"
+    compile "org.webjars:bootstrap:4.5.0"
+    compile "org.webjars:webjars-locator-core:0.45"
+    compile "org.webjars:js-cookie:2.1.0"
+    compile "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
     compile "com.google.api-client:google-api-client:1.23.0"
     compile "com.google.oauth-client:google-oauth-client-jetty:1.23.0"
     compile "com.google.apis:google-api-services-calendar:v3-rev305-1.23.0"
+
+    compile "com.google.oauth-client:google-oauth-client:$googleOauthVersion"
+    compile "com.google.oauth-client:google-oauth-client-servlet:$googleOauthVersion"
+    compile "com.google.apis:google-api-services-oauth2:v2-rev157-1.25.0"
 }
 
 wrapper {
