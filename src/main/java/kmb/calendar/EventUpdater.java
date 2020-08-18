@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,23 +29,26 @@ public class EventUpdater
 {
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final BatchCallback BATCH_CALLBACK = new BatchCallback();
-    private static final long THREE_DAYS_IN_MS = TimeUnit.DAYS.toMillis(3);
     private static final String TEXT_TO_REPLACE = "Registration will open 72 hours before class start time. Class size is ";
     private static final Pattern TEXT_TO_REPLACE_PATTERN = Pattern.compile(TEXT_TO_REPLACE, Pattern.LITERAL);
     private static final String NEW_TEXT = "Spots:";
     private final Calendar calendarClient;
     private final List<CalendarListEntry> calendars;
+    private final long updatePeriodInMs;
 
     /**
      * Constructor.
      *
-     * @param calendarClient The client for accessing the Calendar API
-     * @param calendars      The list of calendars which should be monitored.
+     * @param calendarClient   The client for accessing the Calendar API
+     * @param calendars        The list of calendars which should be monitored.
+     * @param updatePeriodInMs How far into the future to update events, e.g. a period of 3 days means that the event
+     *                         updater will update events starting within 3 days.
      */
-    public EventUpdater(Calendar calendarClient, List<CalendarListEntry> calendars)
+    public EventUpdater(Calendar calendarClient, List<CalendarListEntry> calendars, long updatePeriodInMs)
     {
         this.calendarClient = calendarClient;
         this.calendars = new ArrayList<>(calendars);
+        this.updatePeriodInMs = updatePeriodInMs;
     }
 
     /**
@@ -61,7 +63,7 @@ public class EventUpdater
             // Request all events in the next 3 days from each calendar.
             long currentTimeMs = System.currentTimeMillis();
             DateTime now = new DateTime(currentTimeMs);
-            DateTime threeDays = new DateTime(currentTimeMs + THREE_DAYS_IN_MS);
+            DateTime endTime = new DateTime(currentTimeMs + updatePeriodInMs);
 
             boolean eventsUpdated = false;
 
@@ -72,7 +74,7 @@ public class EventUpdater
 
                 Events eventsResponse = calendarClient.events().list(calendarId)
                         .setTimeMin(now)
-                        .setTimeMax(threeDays)
+                        .setTimeMax(endTime)
                         .setOrderBy("startTime")
                         .setSingleEvents(true)
                         .execute();

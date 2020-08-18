@@ -42,6 +42,7 @@ public class CalendarEditor
     private static final String APPLICATION_NAME = "Google Calendar Editor";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final long THREE_DAYS_IN_MS = TimeUnit.DAYS.toMillis(3);
 
     /**
      * Global instance of the scopes required by this quickstart.
@@ -96,11 +97,12 @@ public class CalendarEditor
             logger.info("The following calendars will be monitored and updated: {}", calendarNames);
         }
 
-        EventUpdater eventUpdater = new EventUpdater(calendarClient, selectedCalendars);
+        // TODO: Add a command line arg to set the update period instead of hard-coding to 3 days
+        EventUpdater eventUpdater = new EventUpdater(calendarClient, selectedCalendars, THREE_DAYS_IN_MS);
 
         executorService.scheduleAtFixedRate(() -> {
             logger.info("Running update thread.");
             eventUpdater.updateEvents();
-        }, 0, 1, TimeUnit.MINUTES); // TODO: Change the unit to hours after testing
+        }, 0, 1, TimeUnit.HOURS); // TODO: Change the unit to hours after testing, or better yet, make it configurable via an arg
     }
 }
