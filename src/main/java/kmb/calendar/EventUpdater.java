@@ -69,6 +69,7 @@ public class EventUpdater
 
             for (CalendarListEntry calendar : calendars)
             {
+                int eventsUpdatedForCurrentCalendar = 0;
                 String calendarId = calendar.getId();
                 String calendarName = calendar.getSummary();
 
@@ -84,22 +85,36 @@ public class EventUpdater
                 {
                     logger.info("No events found in the next 3 days for calendar {}.", calendarName);
                     continue;
+                } else
+                {
+                    logger.trace("Found {} events in the next 3 days for calendar {}", events.size(), calendarName);
                 }
 
                 for (Event event : events)
                 {
                     String eventTitle = event.getSummary();
+                    DateTime eventStart = event.getStart().getDateTime();
                     String eventDescription = event.getDescription();
+                    logger.trace("Checking if update needed for event {} ({}) on calendar {}", eventTitle, eventStart, calendarName);
 
                     if (eventDescription != null && eventDescription.contains(TEXT_TO_REPLACE))
                     {
                         String updatedDescription = TEXT_TO_REPLACE_PATTERN.matcher(eventDescription).replaceAll(Matcher.quoteReplacement(NEW_TEXT));
                         event.setDescription(updatedDescription);
 
-                        logger.info("Queuing update for event {} on calendar {}", eventTitle, calendarName);
+                        logger.debug("Queuing update for event {} on calendar {}", eventTitle, calendarName);
                         calendarClient.events().update(calendarId, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
                         eventsUpdated = true;
+                        eventsUpdatedForCurrentCalendar++;
                     }
+                }
+
+                if (eventsUpdatedForCurrentCalendar == 0)
+                {
+                    logger.debug("No events updated in the next 3 days for calendar {}.", calendarName);
+                } else
+                {
+                    logger.trace("{} events updated in the next 3 days for calendar {}.", eventsUpdatedForCurrentCalendar, calendarName);
                 }
             }
 
@@ -128,7 +143,7 @@ public class EventUpdater
         @Override
         public void onSuccess(Event event, HttpHeaders responseHeaders)
         {
-            logger.info("Event edit was successful: {}", event.getSummary());
+            logger.info("Event edit was successful: {} ({})", event.getSummary(), event.getStart().getDateTime());
             // TODO: Anything else to do on success?
         }
     }

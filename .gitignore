@@ -49,3 +49,5 @@ gradle-app.setting
 #Private credentials; don't commit to repo
 /src/main/resources/credentials.json
 tokens/
+
+*.log

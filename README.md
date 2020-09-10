@@ -11,5 +11,6 @@ Setup instructions
 3. Update the calendar names in the src/main/resources/calendarNames.csv to be a comma-separated list of the names of 
    the calendars you want to update.
 4. Execute `gradlew run` on the command line. The first time, it will open a browser and prompt you for access to your
-   Google calendar. The application log an error the first time because of this; just run it again.
-5. Check the logs for the application output.
+   Google calendar. The application may log an error the first time because of this; just run it again.
+5. Check the logs for the application output. The application will log to the console and to a file called 
+   calendar-editor.log in the current directory. This can be adjusted in the log4j.properties file within src/main/resources.
