@@ -65,7 +65,7 @@ public class CalendarSelector
             while ((line = bufferedReader.readLine()) != null)
             {
                 String[] values = line.split(",");
-                calendarNames.addAll(Arrays.asList(values));
+                Arrays.stream(values).map(String::trim).forEach(calendarNames::add);
             }
         } catch (IOException e)
         {
