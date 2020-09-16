@@ -57,7 +57,6 @@ public class EventUpdater
      */
     public void updateEvents()
     {
-        BatchRequest batchRequest = calendarClient.batch();
         try
         {
             // Request all events in the next 3 days from each calendar.
@@ -65,10 +64,12 @@ public class EventUpdater
             DateTime now = new DateTime(currentTimeMs);
             DateTime endTime = new DateTime(currentTimeMs + updatePeriodInMs);
 
-            boolean eventsUpdated = false;
-
             for (CalendarListEntry calendar : calendars)
             {
+                // The API doesn't support batch operations on different calenders in the same request, so a batch
+                // request needs to be created for each calendar.
+                BatchRequest batchRequest = calendarClient.batch();
+
                 int eventsUpdatedForCurrentCalendar = 0;
                 String calendarId = calendar.getId();
                 String calendarName = calendar.getSummary();
@@ -104,7 +105,6 @@ public class EventUpdater
 
                         logger.debug("Queuing update for event {} on calendar {}", eventTitle, calendarName);
                         calendarClient.events().update(calendarId, event.getId(), event).queue(batchRequest, BATCH_CALLBACK);
-                        eventsUpdated = true;
                         eventsUpdatedForCurrentCalendar++;
                     }
                 }
@@ -115,13 +115,10 @@ public class EventUpdater
                 } else
                 {
                     logger.trace("{} events updated in the next 3 days for calendar {}.", eventsUpdatedForCurrentCalendar, calendarName);
-                }
-            }
 
-            // Only execute the batch request if there are events to be updated.
-            if (eventsUpdated)
-            {
-                batchRequest.execute();
+                    // Only execute the batch request if there are events to be updated.
+                    batchRequest.execute();
+                }
             }
         } catch (IOException e)
         {
