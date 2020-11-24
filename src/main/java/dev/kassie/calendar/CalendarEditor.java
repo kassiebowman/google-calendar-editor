@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * Main class for Google Calendar Editor application.
  *
  * @author kbowman
- * @since 1.0.0
+ * @since 0.0.1
  */
 public class CalendarEditor
 {
@@ -80,7 +80,7 @@ public class CalendarEditor
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void main(String... args) throws IOException, GeneralSecurityException
+    public static void start(String... args) throws IOException, GeneralSecurityException
     {
         // Build a new authorized API client service.
         final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();

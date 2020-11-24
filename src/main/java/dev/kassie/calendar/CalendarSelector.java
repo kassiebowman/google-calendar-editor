@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * Responsible for selecting the calendars which will be monitored by the application.
  *
  * @author kbowman
- * @since 1.0.0
+ * @since 0.0.1
  */
 public class CalendarSelector
 {

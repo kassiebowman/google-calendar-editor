@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * Responsible for communicating with Google Calendars API to update calendar events.
  *
  * @author kbowman
- * @since 1.0.0
+ * @since 0.0.1
  */
 public class EventUpdater
 {

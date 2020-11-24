@@ -1,23 +1,35 @@
 plugins {
+    id 'org.springframework.boot' version '2.4.0'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java'
-    id 'application'
+    id 'project-report' // For analyzing dependencies when necessary
 }
 
-mainClassName = 'dev.kassie.calendar.CalendarEditor'
-
-group 'dev.kassie.calendar'
-version '1.0.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+group = 'dev.kassie.calendar'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
 
 repositories {
     mavenCentral()
 }
 
+configurations {
+    // spring-boot-start-web uses Tomcat as the default. To use Jetty instead, we must exclude the tomcat dependency
+    compile.exclude module: "spring-boot-starter-tomcat"
+}
+
 dependencies {
-    compile 'com.google.api-client:google-api-client:1.23.0'
-    compile 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
-    compile 'com.google.apis:google-api-services-calendar:v3-rev305-1.23.0'
-    compile "org.slf4j:slf4j-log4j12:1.7.7"
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.4.0'
+    implementation 'org.springframework.boot:spring-boot-starter-jetty:2.4.0'
+
+    implementation 'com.google.api-client:google-api-client:1.23.0'
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev305-1.23.0'
+    implementation 'org.slf4j:slf4j-api:1.7.7'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
 }
