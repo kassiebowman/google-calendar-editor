@@ -3,9 +3,9 @@ plugins {
     id 'application'
 }
 
-mainClassName = 'kmb.calendar.CalendarEditor'
+mainClassName = 'dev.kassie.calendar.CalendarEditor'
 
-group 'kmb.calendar'
+group 'dev.kassie.calendar'
 version '1.0.0-SNAPSHOT'
 
 sourceCompatibility = 1.8

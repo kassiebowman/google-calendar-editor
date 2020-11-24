@@ -1,4 +1,4 @@
-package kmb.calendar;
+package dev.kassie.calendar;
 
 import com.google.api.client.googleapis.batch.BatchRequest;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;

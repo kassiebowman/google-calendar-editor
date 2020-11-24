@@ -1,4 +1,4 @@
-package kmb.calendar;
+package dev.kassie.calendar;
 
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
