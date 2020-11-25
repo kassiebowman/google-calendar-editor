@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'dev.kassie.calendar'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2-SNAPSHOT'
 sourceCompatibility = '11'
 
 repositories {
@@ -21,6 +21,8 @@ configurations {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:2.4.0'
     implementation 'org.springframework.boot:spring-boot-starter-jetty:2.4.0'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor:2.4.0'
 
     implementation 'com.google.api-client:google-api-client:1.23.0'
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
