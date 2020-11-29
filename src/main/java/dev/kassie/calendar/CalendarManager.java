@@ -23,10 +23,11 @@ import java.util.stream.Collectors;
  * @since 0.0.1
  */
 @Component
-public class CalendarSelector
+public class CalendarManager
 {
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private final List<CalendarListEntry> calendars;
+    private final List<CalendarListEntry> selectedCalendars;
+    private final Calendar calendarClient;
 
     /**
      * Constructor.
@@ -35,22 +36,22 @@ public class CalendarSelector
      * @param calendarClient     Client for interacting with the Google Calendar API
      */
     @Autowired
-    public CalendarSelector(CalendarProperties calendarProperties, Calendar calendarClient)
+    public CalendarManager(CalendarProperties calendarProperties, Calendar calendarClient)
     {
+        this.calendarClient = calendarClient;
         List<String> calendarNames = calendarProperties.getCalendarNames();
 
-        List<CalendarListEntry> availableCalendars = queryForCalendars(calendarClient);
+        List<CalendarListEntry> availableCalendars = getAvailableCalendars();
 
-        calendars = getCalendarsForNames(calendarNames, availableCalendars);
+        selectedCalendars = getCalendarsForNames(calendarNames, availableCalendars);
     }
 
     /**
      * Queries the API for the available calendars.
      *
-     * @param calendarClient The client for accessing the Calendar API
      * @return The list of available calendars or an empty list if an error occurred.
      */
-    private List<CalendarListEntry> queryForCalendars(Calendar calendarClient)
+    public List<CalendarListEntry> getAvailableCalendars()
     {
         try
         {
@@ -99,6 +100,6 @@ public class CalendarSelector
      */
     public List<CalendarListEntry> getSelectedCalendars()
     {
-        return Collections.unmodifiableList(calendars);
+        return Collections.unmodifiableList(selectedCalendars);
     }
 }

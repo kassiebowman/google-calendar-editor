@@ -48,11 +48,11 @@ public class EventUpdater
      * Constructor.
      *
      * @param calendarProperties The application properties
-     * @param calendarSelector   Selector for getting the calendars the user wants to monitor
+     * @param calendarManager    Manages the list of calendars the user wants to monitor
      * @param calendarClient     Client for interacting with the Google Calendar API
      */
     @Autowired
-    public EventUpdater(CalendarProperties calendarProperties, CalendarSelector calendarSelector, Calendar calendarClient)
+    public EventUpdater(CalendarProperties calendarProperties, CalendarManager calendarManager, Calendar calendarClient)
     {
         this.calendarClient = calendarClient;
 
@@ -62,7 +62,7 @@ public class EventUpdater
         replacementText = calendarProperties.getReplacementText();
         updatePeriodInMs = calendarProperties.getUpdatePeriod().toMillis();
 
-        calendars = calendarSelector.getSelectedCalendars();
+        calendars = calendarManager.getSelectedCalendars();
 
         if (logger.isInfoEnabled())
         {

@@ -44,6 +44,17 @@ public class CalendarProperties
      */
     private Duration queryPeriod = Duration.ofMinutes(1);
 
+    public void addCalendarName(String calendarName)
+    {
+        calendarNames.add(calendarName);
+        // TODO: Fire event for changes
+    }
+
+    public void removeCalendarName(String calendarName)
+    {
+        calendarNames.remove(calendarName);
+    }
+
     public List<String> getCalendarNames()
     {
         return Collections.unmodifiableList(calendarNames);
