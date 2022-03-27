@@ -66,7 +66,7 @@ public class EventUpdater
 
             for (CalendarListEntry calendar : calendars)
             {
-                // The API doesn't support batch operations on different calenders in the same request, so a batch
+                // The API doesn't support batch operations on different calendars in the same request, so a batch
                 // request needs to be created for each calendar.
                 BatchRequest batchRequest = calendarClient.batch();
 

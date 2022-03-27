@@ -105,9 +105,7 @@ public class CalendarEditor
         // TODO: Add a command line arg to set the update period instead of hard-coding to 3 days
         EventUpdater eventUpdater = new EventUpdater(calendarClient, selectedCalendars, THREE_DAYS_IN_MS);
 
-        executorService.scheduleAtFixedRate(() -> {
-            logger.info("Running update thread.");
-            eventUpdater.updateEvents();
-        }, 0, 1, TimeUnit.HOURS); // TODO: Change the unit to hours after testing, or better yet, make it configurable via an arg
+        logger.info("Running update thread.");
+        eventUpdater.updateEvents();
     }
 }
